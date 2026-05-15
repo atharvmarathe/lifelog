@@ -1,1 +1,644 @@
-# lifelog
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LifeLog">
+<meta name="theme-color" content="#0d0d0d">
+<title>LifeLog</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --surface2: #1c1c1c;
+    --surface3: #232323;
+    --border: #2a2a2a;
+    --border2: #333;
+    --accent: #c8a97e;
+    --accent2: #e8c99e;
+    --accent-dim: rgba(200,169,126,0.12);
+    --text: #e8e2d9;
+    --text-dim: #8a8278;
+    --text-muted: #555;
+    --green: #7aad7a;
+    --red: #c07070;
+    --blue: #7a9cad;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%; height: 100dvh;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+
+  body { display: flex; flex-direction: column; }
+
+  /* ── INSTALL BANNER ── */
+  #install-banner {
+    display: none;
+    background: var(--accent-dim);
+    border-bottom: 1px solid rgba(200,169,126,0.25);
+    padding: 10px 16px;
+    font-size: 11px;
+    color: var(--accent2);
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  #install-banner.show { display: flex; }
+  #install-banner span { flex: 1; line-height: 1.4; }
+  .install-btn {
+    background: var(--accent);
+    color: #0d0d0d;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .install-dismiss { cursor: pointer; font-size: 16px; color: var(--text-muted); padding: 2px 4px; }
+
+  /* ── APP SHELL ── */
+  #app {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    padding-top: var(--safe-top);
+  }
+
+  /* ── MOBILE NAV ── */
+  #mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: calc(52px + var(--safe-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+    padding-bottom: var(--safe-bottom);
+  }
+  .mobile-nav-inner {
+    height: 52px;
+    display: flex;
+    align-items: stretch;
+  }
+  .mnav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .mnav-btn .micon { font-size: 18px; }
+  .mnav-btn.active { color: var(--accent); }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+  }
+
+  #logo {
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  #logo .wordmark {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent2);
+    letter-spacing: -0.5px;
+  }
+  #logo .tag { font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+
+  #sidebar-top { padding: 12px 10px 8px; display: flex; flex-direction: column; gap: 6px; }
+
+  .sidebar-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 8px 10px;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .sidebar-btn:hover, .sidebar-btn:active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  #sidebar-scroll { flex: 1; overflow-y: auto; padding: 6px 0; }
+  #sidebar-scroll::-webkit-scrollbar { width: 3px; }
+  #sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  .section-header {
+    padding: 8px 14px 4px;
+    font-size: 9px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-add { cursor: pointer; color: var(--text-muted); font-size: 15px; padding: 1px 4px; border-radius: 3px; transition: color 0.15s; }
+  .section-add:hover { color: var(--accent); }
+
+  .project-label {
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 11px;
+    border-radius: 3px;
+    margin: 0 4px;
+    transition: background 0.12s;
+    user-select: none;
+  }
+  .project-label:hover { background: var(--surface2); }
+  .proj-arrow { font-size: 8px; transition: transform 0.2s; }
+  .project-label.open .proj-arrow { transform: rotate(90deg); }
+  .project-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .project-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .project-chats { display: none; padding-left: 12px; }
+  .project-chats.open { display: block; }
+
+  .chat-item {
+    padding: 6px 10px 6px 22px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 11px;
+    border-radius: 3px;
+    margin: 1px 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.12s, color 0.12s;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .chat-item:hover { background: var(--surface2); color: var(--text-dim); }
+  .chat-item.active { background: var(--accent-dim); color: var(--accent); border-left: 2px solid var(--accent); padding-left: 20px; }
+  .chat-item .chat-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .chat-item .chat-date { font-size: 9px; color: var(--text-muted); margin-left: auto; flex-shrink: 0; }
+
+  #settings-panel { border-top: 1px solid var(--border); padding: 10px; }
+  #model-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  #model-select-wrap:hover { border-color: var(--accent); }
+  #model-select-wrap .model-label { font-size: 10px; color: var(--text-dim); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── MAIN ── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  #topbar {
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  #menu-btn {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 16px;
+    width: 30px; height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  #chat-title-input {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 300;
+    font-style: italic;
+    flex: 1;
+    outline: none;
+    min-width: 0;
+  }
+  #chat-title-input::placeholder { color: var(--text-muted); }
+
+  .topbar-badge {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 14px;
+    width: 30px; height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .topbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── MESSAGES ── */
+  #messages-wrap {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #welcome {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: var(--text-muted);
+    padding: 32px 24px;
+    text-align: center;
+  }
+  #welcome .big { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 300; font-style: italic; color: var(--text-dim); line-height: 1.2; }
+  #welcome .sub { font-size: 11px; letter-spacing: 0.5px; line-height: 1.8; max-width: 300px; }
+  #welcome .hints { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+  #welcome .hint-chip {
+    border: 1px solid var(--border);
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  #welcome .hint-chip:hover, #welcome .hint-chip:active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    -webkit-overflow-scrolling: touch;
+  }
+  #messages::-webkit-scrollbar { width: 3px; }
+  #messages::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  .msg-wrap { display: flex; padding: 5px 14px; gap: 10px; }
+  .msg-wrap:hover { background: rgba(255,255,255,0.01); }
+
+  .msg-avatar {
+    width: 26px; height: 26px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+  .msg-avatar.ai { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,169,126,0.2); }
+  .msg-avatar.user { background: rgba(122,173,122,0.12); color: var(--green); border: 1px solid rgba(122,173,122,0.2); }
+
+  .msg-body { flex: 1; min-width: 0; }
+  .msg-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+  .msg-role { font-size: 11px; font-weight: 500; }
+  .msg-role.ai { color: var(--accent); }
+  .msg-role.user { color: var(--green); }
+  .msg-timestamp { font-size: 10px; color: var(--text-muted); }
+  .msg-text { color: var(--text); line-height: 1.65; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+  .msg-text code { background: var(--surface3); border: 1px solid var(--border); padding: 1px 5px; border-radius: 3px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent2); }
+  .msg-text pre { background: var(--surface2); border: 1px solid var(--border); padding: 10px; border-radius: 4px; overflow-x: auto; margin: 6px 0; }
+  .msg-text pre code { background: none; border: none; padding: 0; }
+
+  .cursor::after { content: '▋'; animation: blink 0.8s infinite; color: var(--accent); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── INPUT AREA ── */
+  #input-area {
+    border-top: 1px solid var(--border);
+    padding: 10px 14px calc(10px + var(--safe-bottom));
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  #api-warning {
+    display: none;
+    background: rgba(192,112,112,0.08);
+    border: 1px solid rgba(192,112,112,0.3);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-size: 11px;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+
+  #time-row { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; flex-wrap: wrap; }
+  .time-label { font-size: 10px; color: var(--text-muted); }
+  #msg-datetime {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    outline: none;
+    flex: 1;
+    min-width: 160px;
+    transition: border-color 0.15s;
+  }
+  #msg-datetime:focus { border-color: var(--accent); }
+  .time-toggle {
+    font-size: 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 9px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: none;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .time-toggle:hover { color: var(--accent); border-color: var(--accent); }
+  .time-toggle.on { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+
+  #input-box { display: flex; gap: 8px; align-items: flex-end; }
+  #user-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 9px 11px;
+    border-radius: 6px;
+    outline: none;
+    resize: none;
+    min-height: 40px;
+    max-height: 150px;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  #user-input:focus { border-color: var(--accent); }
+  #user-input::placeholder { color: var(--text-muted); }
+  #send-btn {
+    background: var(--accent);
+    border: none;
+    color: #0d0d0d;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 9px 13px;
+    border-radius: 6px;
+    cursor: pointer;
+    height: 40px;
+    flex-shrink: 0;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  #send-btn:hover, #send-btn:active { background: var(--accent2); }
+  #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px 16px 0 0;
+    padding: 20px 20px calc(20px + var(--safe-bottom));
+    width: 100%;
+    max-width: 540px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 90dvh;
+    overflow-y: auto;
+    animation: slideUp 0.25s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 0 auto -6px;
+  }
+
+  .modal h2 { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 300; font-style: italic; color: var(--accent2); }
+  .modal-field { display: flex; flex-direction: column; gap: 5px; }
+  .modal-field label { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); }
+  .modal-field input, .modal-field select, .modal-field textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+  }
+  .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--accent); }
+  .modal-field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23555'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 28px; }
+  select option { background: #1c1c1c; }
+
+  .color-swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+  .swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s, border-color 0.1s; }
+  .swatch:hover, .swatch:active { transform: scale(1.2); }
+  .swatch.selected { border-color: white; transform: scale(1.1); }
+
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
+  .modal-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 9px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+    background: none;
+    color: var(--text-dim);
+  }
+  .modal-btn:hover, .modal-btn:active { border-color: var(--text-dim); color: var(--text); }
+  .modal-btn.primary { background: var(--accent); color: #0d0d0d; border-color: var(--accent); font-weight: 500; }
+  .modal-btn.primary:hover, .modal-btn.primary:active { background: var(--accent2); }
+  .modal-btn.danger { border-color: var(--red); color: var(--red); }
+
+  .model-preset-list { display: flex; flex-direction: column; gap: 6px; }
+  .model-preset {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .model-preset:hover, .model-preset:active { border-color: var(--accent); color: var(--text); background: var(--accent-dim); }
+  .model-preset.selected { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .model-preset .mprov { font-size: 10px; color: var(--text-muted); }
+  .model-preset .mctx { font-size: 10px; color: var(--text-muted); }
+
+  #export-preview {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+    max-height: 180px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: 'DM Mono', monospace;
+    line-height: 1.5;
+  }
+
+  /* ── MOBILE OVERLAY ── */
+  #sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 40;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 45;
+      transform: translateX(-100%);
+      width: 280px;
+    }
+    #sidebar.mobile-open {
+      transform: translateX(0);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    }
+    #sidebar-overlay.show { display: block; }
+    #menu-btn { display: flex; }
+    #main { padding-bottom: 52px; }
+    #mobile-nav { display: block; }
+    .modal { border-radius: 16px 16px 0 0; }
+  }
+
+  @media (min-width: 701px) {
+    .modal-overlay { align-items: center; }
+    .modal { border-radius: 12px; max-width: 460px; width: 90%; padding: 24px; }
+    .modal-handle { display: none; }
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Install Banner -->
+<div id="install-banner">
+  <span>📲 Add LifeLog to your home screen for the full app experience.</span>
+  <button class="install-btn" id="install-btn" onclick="installApp()">Install</button>
+  <span class="install-dismiss" onclick="dismissInstall()">✕</span>
+</div>
+
+<!-- Sidebar Overlay (mobile) -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div id="app">
+  <!-- ===== SIDEBAR ===== -->
+  <div id="sidebar">
+    <div id="logo">
+      <span class="wordmark">LifeLog</span>
+      <span class="tag">groq ai</span>
+    </div>
+
+    <div id="sidebar-top">
+      <button class="sidebar-btn" oncli# lifelog
